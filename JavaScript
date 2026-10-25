@@ -1,1 +1,181 @@
 
+"use strict";
+
+// 1. MOBILE NAVIGATION
+const menuToggle = document.getElementById("menuToggle");
+const navLinks = document.getElementById("navLinks");
+
+menuToggle.addEventListener("click", () => {
+  const isOpen = navLinks.classList.toggle("open");
+
+  menuToggle.setAttribute("aria-expanded", String(isOpen));
+  menuToggle.setAttribute(
+    "aria-label",
+    isOpen ? "Close navigation" : "Open navigation"
+  );
+  menuToggle.textContent = isOpen ? "✕" : "☰";
+});
+
+// Close the mobile menu after clicking a navigation link.
+navLinks.querySelectorAll("a").forEach((link) => {
+  link.addEventListener("click", () => {
+    navLinks.classList.remove("open");
+    menuToggle.setAttribute("aria-expanded", "false");
+    menuToggle.setAttribute("aria-label", "Open navigation");
+    menuToggle.textContent = "☰";
+  });
+});
+
+// 2. DARK / LIGHT THEME
+const themeToggle = document.getElementById("themeToggle");
+
+function setTheme(isLight) {
+  document.body.classList.toggle("light-theme", isLight);
+  themeToggle.textContent = isLight ? "☀" : "☾";
+  themeToggle.setAttribute(
+    "aria-label",
+    isLight ? "Switch to dark theme" : "Switch to light theme"
+  );
+}
+
+let isLightTheme = false;
+setTheme(isLightTheme);
+
+themeToggle.addEventListener("click", () => {
+  isLightTheme = !document.body.classList.contains("light-theme");
+  setTheme(isLightTheme);
+});
+
+// 3. PORTFOLIO PROJECT FILTERS
+const filterButtons = document.querySelectorAll(".filter-btn");
+const projectCards = document.querySelectorAll(".project-card");
+
+filterButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const selectedFilter = button.dataset.filter;
+
+    filterButtons.forEach((item) => {
+      const active = item === button;
+      item.classList.toggle("active", active);
+      item.setAttribute("aria-pressed", String(active));
+    });
+
+    projectCards.forEach((card) => {
+      const matches =
+        selectedFilter === "all" ||
+        card.dataset.category === selectedFilter;
+
+      card.hidden = !matches;
+    });
+  });
+});
+
+// 4. SERVICE LINKS AUTO-SELECT THE CONTACT FORM
+const serviceSelect = document.getElementById("service");
+const nameInput = document.getElementById("name");
+
+document.querySelectorAll("[data-service]").forEach((link) => {
+  link.addEventListener("click", () => {
+    serviceSelect.value = link.dataset.service;
+  });
+});
+
+// 5. PRICING BUTTONS AUTO-SELECT A SERVICE
+document.querySelectorAll("[data-plan]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const plan = button.dataset.plan;
+    const message = document.getElementById("message");
+
+    const currentText = message.value.trim();
+    const planText = "I'm interested in the " + plan + " package.";
+
+    if (!currentText.includes(planText)) {
+      message.value = currentText
+        ? planText + "\n\n" + currentText
+        : planText;
+    }
+  });
+});
+
+// 6. CONTACT FORM VALIDATION AND ENQUIRY PREPARATION
+const contactForm = document.getElementById("contactForm");
+const formStatus = document.getElementById("formStatus");
+
+contactForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  if (!contactForm.reportValidity()) {
+    return;
+  }
+
+  const formData = new FormData(contactForm);
+
+  const name = String(formData.get("name") || "").trim();
+  const email = String(formData.get("email") || "").trim();
+  const service = String(formData.get("service") || "");
+  const budget = String(formData.get("budget") || "");
+  const message = String(formData.get("message") || "").trim();
+
+  if (!name || !email || !service || !message) {
+    formStatus.textContent = "Please complete all required fields.";
+    return;
+  }
+
+  const enquiry = [
+    "NOVA DIGITAL — PROJECT ENQUIRY",
+    "",
+    "Name: " + name,
+    "Email: " + email,
+    "Service: " + service,
+    "Budget: " + budget,
+    "",
+    "Project details:",
+    message
+  ].join("\n");
+
+  formStatus.replaceChildren();
+
+  const confirmation = document.createElement("p");
+  confirmation.textContent =
+    "Your enquiry is prepared. Copy it below and send it to your chosen contact.";
+  formStatus.appendChild(confirmation);
+
+  const preview = document.createElement("textarea");
+  preview.readOnly = true;
+  preview.rows = 8;
+  preview.value = enquiry;
+  preview.setAttribute("aria-label", "Prepared project enquiry");
+  formStatus.appendChild(preview);
+
+  const copyButton = document.createElement("button");
+  copyButton.type = "button";
+  copyButton.className = "btn btn-secondary";
+  copyButton.textContent = "Copy Enquiry";
+
+  copyButton.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(enquiry);
+      copyButton.textContent = "Copied!";
+    } catch {
+      preview.focus();
+      preview.select();
+      formStatus.querySelector("p").textContent =
+        "Automatic copy is unavailable. Select the text and copy it manually.";
+    }
+  });
+
+  formStatus.appendChild(copyButton);
+});
+
+// 7. AUTOMATIC FOOTER YEAR
+document.getElementById("year").textContent =
+  new Date().getFullYear();
+
+// 8. ACCESSIBLE DEFAULT FILTER STATE
+filterButtons.forEach((button) => {
+  button.setAttribute(
+    "aria-pressed",
+    String(button.classList.contains("active"))
+  );
+});
+
